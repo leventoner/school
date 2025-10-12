@@ -1,15 +1,47 @@
-# Java / Maven
-target/
-*.jar
-*.war
-*.ear
-*.class
-*.log
-hs_err_pid*
+# Generic
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE - General
+.idea/
 .project
 .classpath
-.settings
-.mvn/wrapper/maven-wrapper.jar
+.settings/
+*.iml
+*.iws
+*.ipr
+
+# IDE - Visual Studio Code
+.vscode/
+
+# IDE - Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+# IDE - NetBeans
+/nbproject/private/
+/build/
+/nbbuild/
+/dist/
+/nbdist/
+.nb-gradle/
+
+# Java / Maven / Gradle
+target/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -18,19 +50,29 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+build/
+.gradle
+*.jar
+*.war
+*.ear
+*.class
+*.log
+hs_err_pid*
 
 # Frontend / Node / React
+node_modules/
 frontend/node_modules/
 frontend/build/
+frontend/coverage/
 frontend/.pnp
 frontend/.pnp.js
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-frontend/coverage
-
-# IDE - Visual Studio Code
-.vscode/
 
 # OS generated files
 .DS_Store
