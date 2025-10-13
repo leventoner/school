@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import AuthService from './services/AuthService'; // Import AuthService
+import AuthService from '../services/AuthService'; // Import AuthService
 
 const API_URL = 'http://localhost:8083/api/students';
 
 const UpdateStudent = () => {
-  const [student, setStudent] = useState(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [schoolNumber, setSchoolNumber] = useState('');
@@ -13,49 +12,74 @@ const UpdateStudent = () => {
   const [studentClass, setStudentClass] = useState('');
   const [courses, setCourses] = useState('');
   const [grades, setGrades] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const fetchStudent = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const user = AuthService.getCurrentUser();
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/${id}`, {
-        headers: { 'Authorization': AuthService.getAuthHeader().Authorization }
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setStudent(data);
-      setFirstName(data.firstName);
-      setLastName(data.lastName);
-      setSchoolNumber(data.schoolNumber || '');
-      setBirthDate(data.birthDate);
-      setStudentClass(data.studentClass || '');
-      setCourses(data.courses.join(', '));
-      setGrades(Object.entries(data.grades).map(([key, value]) => `${key}:${value}`).join(', '));
-    } catch (e) {
-      setError('Could not fetch student data.');
-      console.error(e);
-    } finally {
-      setIsLoading(false);
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    const user = AuthService.getCurrentUser();
+    if (!user) {
+      navigate('/login');
     }
+  }, [navigate]);
+
+  // Fetch student data for pre-population
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          headers: {
+            'Authorization': AuthService.getAuthHeader().Authorization,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          AuthService.logout();
+          navigate('/login');
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setFirstName(data.firstName || '');
+        setLastName(data.lastName || '');
+        setSchoolNumber(data.schoolNumber || '');
+        setBirthDate(data.birthDate || '');
+        setStudentClass(data.studentClass || '');
+        setCourses(data.courses ? data.courses.join(', ') : '');
+        setGrades(data.grades ? Object.entries(data.grades).map(([key, value]) => `${key}:${value}`).join(',') : '');
+      } catch (e) {
+        setError('Could not fetch student data. Please check your connection or login status.');
+        console.error(e);
+      }
+    };
+
+    fetchStudentData();
   }, [id, navigate]);
 
-  useEffect(() => {
-    fetchStudent();
-  }, [fetchStudent]);
+  // Check if the current user has ADMIN or MODERATOR roles
+  const currentUser = AuthService.getCurrentUser();
+  const userRoles = currentUser ? currentUser.roles : [];
+  const canUpdateStudent = userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_MODERATOR');
 
   const handleUpdateStudent = async (e) => {
     e.preventDefault();
+
+    // If the user doesn't have the required role, prevent submission
+    if (!canUpdateStudent) {
+      setError('You do not have permission to update students.');
+      return;
+    }
+
+    if (!firstName || !lastName || !schoolNumber || !birthDate || !courses) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
     const coursesArray = courses.split(',').map(course => course.trim());
     const gradesObject = grades.split(',').reduce((acc, grade) => {
       const [key, value] = grade.split(':');
@@ -66,24 +90,17 @@ const UpdateStudent = () => {
     }, {});
 
     try {
-      const user = AuthService.getCurrentUser();
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': AuthService.getAuthHeader().Authorization
+          'Authorization': AuthService.getAuthHeader().Authorization // Use JWT token
         },
         body: JSON.stringify({
-          id: student.id,
           firstName,
           lastName,
           schoolNumber,
-          birthDate: birthDate,
+          birthDate,
           studentClass,
           courses: coursesArray,
           grades: gradesObject
@@ -91,20 +108,28 @@ const UpdateStudent = () => {
       });
 
       if (response.ok) {
-        navigate('/students');
+        navigate('/students'); // Redirect to student list after successful update
+      } else if (response.status === 403) {
+        setError('You do not have permission to update this student.');
       } else {
         throw new Error('Failed to update student');
       }
     } catch (e) {
-      setError('Could not update student.');
+      setError('Could not update student. Please check your connection or login status.');
       console.error(e);
     }
   };
 
-  if (isLoading) return <p className="text-center text-gray-500">Loading student...</p>;
-  if (error) return <p className="text-center text-red-500">{error}</p>;
-  if (!student) return <p className="text-center text-gray-500">Student not found.</p>;
+  // Render a message if the user doesn't have permission
+  if (!canUpdateStudent) {
+    return (
+      <div className="text-center text-red-500 mt-8">
+        You do not have permission to access this page. Please log in with an appropriate account.
+      </div>
+    );
+  }
 
+  // Render the form if the user has the necessary role and data is loaded
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto">
       <h2 className="text-3xl font-semibold mb-6 text-gray-800">Update Student</h2>
@@ -117,6 +142,7 @@ const UpdateStudent = () => {
             id="firstName"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
+            placeholder="e.g., Mike"
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -127,6 +153,7 @@ const UpdateStudent = () => {
             id="lastName"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
+            placeholder="e.g., Smith"
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -137,6 +164,7 @@ const UpdateStudent = () => {
             id="schoolNumber"
             value={schoolNumber}
             onChange={(e) => setSchoolNumber(e.target.value)}
+            placeholder="e.g., 12345"
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -157,6 +185,7 @@ const UpdateStudent = () => {
             id="studentClass"
             value={studentClass}
             onChange={(e) => setStudentClass(e.target.value)}
+            placeholder="e.g., Computer Science"
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -167,6 +196,7 @@ const UpdateStudent = () => {
             id="courses"
             value={courses}
             onChange={(e) => setCourses(e.target.value)}
+            placeholder="e.g., Math, Science"
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -177,13 +207,11 @@ const UpdateStudent = () => {
             id="grades"
             value={grades}
             onChange={(e) => setGrades(e.target.value)}
+            placeholder="e.g., Math:A,Science:B"
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <div className="md:col-span-2 flex justify-end gap-4 mt-4">
-          <button type="button" onClick={() => navigate('/students')} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg transition duration-300">
-            Cancel
-          </button>
+        <div className="md:col-span-2 text-right">
           <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
             Update Student
           </button>

@@ -1,0 +1,1 @@
+ALTER TABLE students ADD COLUMN school_number VARCHAR(255);

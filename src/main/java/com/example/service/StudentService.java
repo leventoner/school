@@ -37,6 +37,7 @@ public class StudentService {
 
         student.setFirstName(studentDetails.getFirstName());
         student.setLastName(studentDetails.getLastName());
+        student.setSchoolNumber(studentDetails.getSchoolNumber());
         student.setBirthDate(studentDetails.getBirthDate());
         student.setStudentClass(studentDetails.getStudentClass());
         student.setCourses(studentDetails.getCourses());

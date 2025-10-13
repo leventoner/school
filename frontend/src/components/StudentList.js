@@ -1,96 +1,94 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import AuthService from '../services/AuthService'; // Import AuthService
 
-const credentials = btoa('user:password');
 const API_URL = 'http://localhost:8083/api/students';
 
 const StudentList = () => {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     try {
+      const user = AuthService.getCurrentUser();
+      if (!user) {
+        // If no user is logged in, redirect to login page
+        navigate('/login');
+        return;
+      }
+
       const response = await fetch(API_URL, {
-        headers: { 'Authorization': `Basic ${credentials}` }
+        headers: {
+          'Authorization': AuthService.getAuthHeader().Authorization, // Use JWT token
+          'Content-Type': 'application/json'
+        }
       });
+
+      if (response.status === 401 || response.status === 403) {
+        // If unauthorized or forbidden, clear user data and redirect to login
+        AuthService.logout();
+        navigate('/login');
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       setStudents(data);
     } catch (e) {
-      setError('Could not fetch students. Is the backend running?');
+      setError('Could not fetch students. Please check your connection or login status.');
       console.error(e);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [navigate]); // Include navigate in dependencies
 
   useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
 
-  const handleDeleteStudent = async (id) => {
-    if (window.confirm('Are you sure you want to delete this student?')) {
-      try {
-        const response = await fetch(`${API_URL}/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Basic ${credentials}` }
-        });
-
-        if (response.ok) {
-          fetchStudents(); // Refresh the list
-        } else {
-          throw new Error('Failed to delete student');
-        }
-      } catch (e) {
-        setError('Could not delete student.');
-        console.error(e);
-      }
-    }
-  };
+  // Check if the current user has ADMIN or MODERATOR roles
+  const currentUser = AuthService.getCurrentUser();
+  const userRoles = currentUser ? currentUser.roles : [];
+  const canAddStudent = userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_MODERATOR');
 
   return (
     <div>
-      <h2 className="text-3xl font-semibold mb-6 text-white">Enrolled Students</h2>
-      {isLoading && <p className="text-center text-gray-400">Loading students...</p>}
-      {error && <p className="text-center text-red-400">{error}</p>}
-      {!isLoading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {students.map(student => (
-            <div key={student.id} className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col justify-between transition transform hover:-translate-y-2">
-              <div>
-                <h3 className="text-2xl font-bold text-cyan-400">{student.firstName} {student.lastName}</h3>
-                <p className="text-gray-400 mt-1">Birth Date: {student.birthDate}</p>
-                <p className="text-gray-400 mt-1">Class: {student.studentClass}</p>
-                <p className="text-gray-400 mt-1">Courses: {student.courses.join(', ')}</p>
-                <div className="text-gray-400 mt-1">
-                  Grades:
-                  <ul className="list-disc list-inside">
-                    {Object.entries(student.grades).map(([course, grade]) => (
-                      <li key={course}>{course}: {grade}</li>
-                    ))}
-                  </ul>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-semibold text-gray-800">Enrolled Students</h2>
+        {canAddStudent && ( // Conditionally render the "Add Student" button
+          <Link to="/add" className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+            Add Student
+          </Link>
+        )}
+      </div>
+      {isLoading && <p className="text-center text-gray-500">Loading students...</p>}
+      {error && <p className="text-center text-red-500">{error}</p>}
+      {!isLoading && !error && students.length === 0 && (
+        <p className="text-center text-gray-500 mt-8">No students found. Add one!</p>
+      )}
+      {!isLoading && !error && students.length > 0 && (
+        <div className="bg-white shadow-md rounded-lg">
+          <ul className="divide-y divide-gray-200">
+            {students.map(student => (
+              <li key={student.id} onClick={() => navigate(`/student/${student.id}`)} className="p-4 hover:bg-gray-50 cursor-pointer transition duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="ml-4">
+                      <p className="text-lg font-medium text-gray-900">{student.firstName} {student.lastName}</p>
+                      <p className="text-sm text-gray-500">School Number: {student.schoolNumber}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-end gap-4 mt-6">
-                <Link to={`/update/${student.id}`} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
-                  Update
-                </Link>
-                <button
-                  onClick={() => handleDeleteStudent(student.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
-       {!isLoading && students.length === 0 && <p className="text-center text-gray-500 mt-8">No students found. Add one!</p>}
     </div>
   );
 };

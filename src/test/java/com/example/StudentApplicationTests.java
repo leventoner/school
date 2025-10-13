@@ -43,8 +43,8 @@ class StudentApplicationTests {
 
 	@Test
 	void testGetAllStudents() throws Exception {
-		Student student1 = new Student(1, "John", "Doe", "2004-01-01", "ClassA", Collections.singletonList("Math"), Collections.singletonMap("Math", "A"));
-		Student student2 = new Student(2, "Jane", "Doe", "2002-01-01", "ClassB", Collections.singletonList("History"), Collections.singletonMap("History", "B"));
+		Student student1 = new Student(1, "John", "Doe", "12345", "2004-01-01", "ClassA", Collections.singletonList("Math"), Collections.singletonMap("Math", "A"));
+		Student student2 = new Student(2, "Jane", "Doe", "67890", "2002-01-01", "ClassB", Collections.singletonList("History"), Collections.singletonMap("History", "B"));
 		List<Student> allStudents = Arrays.asList(student1, student2);
 
 		given(studentService.getAllStudents()).willReturn(allStudents);
@@ -60,7 +60,7 @@ class StudentApplicationTests {
 
 	@Test
 	void testGetStudentById() throws Exception {
-		Student student = new Student(1, "John", "Doe", "2004-01-01", "ClassA", Collections.singletonList("Math"), Collections.singletonMap("Math", "A"));
+		Student student = new Student(1, "John", "Doe", "12345", "2004-01-01", "ClassA", Collections.singletonList("Math"), Collections.singletonMap("Math", "A"));
 		given(studentService.getStudentById(1)).willReturn(student);
 
 		mockMvc.perform(get("/api/students/1")
@@ -74,6 +74,7 @@ class StudentApplicationTests {
 		Student studentToInsert = new Student();
 		studentToInsert.setFirstName("New");
 		studentToInsert.setLastName("Student");
+		studentToInsert.setSchoolNumber("99999");
 		studentToInsert.setBirthDate("1999-01-01");
 		studentToInsert.setStudentClass("ClassC");
 		studentToInsert.setCourses(Collections.singletonList("Physics"));
@@ -83,6 +84,7 @@ class StudentApplicationTests {
 		studentToReturn.setId(3);
 		studentToReturn.setFirstName("New");
 		studentToReturn.setLastName("Student");
+		studentToReturn.setSchoolNumber("99999");
 		studentToReturn.setBirthDate("1999-01-01");
 		studentToReturn.setStudentClass("ClassC");
 		studentToReturn.setCourses(Collections.singletonList("Physics"));

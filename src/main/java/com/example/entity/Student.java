@@ -19,6 +19,7 @@ public class Student {
     private int id;
     private String firstName;
     private String lastName;
+    private String schoolNumber;
     private String birthDate;
     private String studentClass;
 
