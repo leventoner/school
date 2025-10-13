@@ -11,8 +11,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -40,8 +43,8 @@ class StudentApplicationTests {
 
 	@Test
 	void testGetAllStudents() throws Exception {
-		Student student1 = new Student(1, "John Doe", "Math");
-		Student student2 = new Student(2, "Jane Doe", "History");
+		Student student1 = new Student(1, "John", "Doe", "2004-01-01", "ClassA", Collections.singletonList("Math"), Collections.singletonMap("Math", "A"));
+		Student student2 = new Student(2, "Jane", "Doe", "2002-01-01", "ClassB", Collections.singletonList("History"), Collections.singletonMap("History", "B"));
 		List<Student> allStudents = Arrays.asList(student1, student2);
 
 		given(studentService.getAllStudents()).willReturn(allStudents);
@@ -51,27 +54,39 @@ class StudentApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.size()").value(2))
-				.andExpect(jsonPath("$[0].name").value("John Doe"))
-				.andExpect(jsonPath("$[1].name").value("Jane Doe"));
+				.andExpect(jsonPath("$[0].firstName").value("John"))
+				.andExpect(jsonPath("$[1].firstName").value("Jane"));
 	}
 
 	@Test
 	void testGetStudentById() throws Exception {
-		Student student = new Student(1, "John Doe", "Math");
+		Student student = new Student(1, "John", "Doe", "2004-01-01", "ClassA", Collections.singletonList("Math"), Collections.singletonMap("Math", "A"));
 		given(studentService.getStudentById(1)).willReturn(student);
 
 		mockMvc.perform(get("/api/students/1")
 						.with(httpBasic("user", "password")))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.name").value("John Doe"));
+				.andExpect(jsonPath("$.firstName").value("John"));
 	}
 
 	@Test
 	void testInsertStudent() throws Exception {
 		Student studentToInsert = new Student();
-		studentToInsert.setName("New Student");
-		studentToInsert.setCourse("Physics");
-		Student studentToReturn = new Student(3, "New Student", "Physics");
+		studentToInsert.setFirstName("New");
+		studentToInsert.setLastName("Student");
+		studentToInsert.setBirthDate("1999-01-01");
+		studentToInsert.setStudentClass("ClassC");
+		studentToInsert.setCourses(Collections.singletonList("Physics"));
+		studentToInsert.setGrades(Collections.singletonMap("Physics", "C"));
+		
+		Student studentToReturn = new Student();
+		studentToReturn.setId(3);
+		studentToReturn.setFirstName("New");
+		studentToReturn.setLastName("Student");
+		studentToReturn.setBirthDate("1999-01-01");
+		studentToReturn.setStudentClass("ClassC");
+		studentToReturn.setCourses(Collections.singletonList("Physics"));
+		studentToReturn.setGrades(Collections.singletonMap("Physics", "C"));
 
 		given(studentService.insertStudent(any(Student.class))).willReturn(studentToReturn);
 

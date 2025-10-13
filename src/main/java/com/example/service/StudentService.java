@@ -35,8 +35,12 @@ public class StudentService {
         Student student = this.studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
-        student.setName(studentDetails.getName());
-        student.setCourse(studentDetails.getCourse());
+        student.setFirstName(studentDetails.getFirstName());
+        student.setLastName(studentDetails.getLastName());
+        student.setBirthDate(studentDetails.getBirthDate());
+        student.setStudentClass(studentDetails.getStudentClass());
+        student.setCourses(studentDetails.getCourses());
+        student.setGrades(studentDetails.getGrades());
 
         return this.studentRepository.save(student);
     }

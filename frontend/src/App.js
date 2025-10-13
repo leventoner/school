@@ -1,13 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+import UpdateStudent from './UpdateStudent';
 
 // Basic Auth credentials - In a real app, use a proper auth system
 const credentials = btoa('user:password');
 const API_URL = 'http://localhost:8083/api/students';
 
-const App = () => {
+const StudentList = () => {
   const [students, setStudents] = useState([]);
-  const [newStudentName, setNewStudentName] = useState('');
-  const [newStudentCourse, setNewStudentCourse] = useState('');
+  const [newStudentFirstName, setNewStudentFirstName] = useState('');
+  const [newStudentLastName, setNewStudentLastName] = useState('');
+  const [newStudentBirthDate, setNewStudentBirthDate] = useState('');
+  const [newStudentClass, setNewStudentClass] = useState('');
+  const [newStudentCourses, setNewStudentCourses] = useState('');
+  const [newStudentGrades, setNewStudentGrades] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -36,10 +42,19 @@ const App = () => {
 
   const handleAddStudent = async (e) => {
     e.preventDefault();
-    if (!newStudentName || !newStudentCourse) {
-      alert('Please fill in both name and course.');
+    if (!newStudentFirstName || !newStudentLastName || !newStudentBirthDate || !newStudentCourses) {
+      alert('Please fill in all fields.');
       return;
     }
+
+    const courses = newStudentCourses.split(',').map(course => course.trim());
+    const grades = newStudentGrades.split(',').reduce((acc, grade) => {
+      const [key, value] = grade.split(':');
+      if (key && value) {
+        acc[key.trim()] = value.trim();
+      }
+      return acc;
+    }, {});
 
     try {
       const response = await fetch(API_URL, {
@@ -48,12 +63,23 @@ const App = () => {
           'Content-Type': 'application/json',
           'Authorization': `Basic ${credentials}`
         },
-        body: JSON.stringify({ name: newStudentName, course: newStudentCourse })
+        body: JSON.stringify({
+          firstName: newStudentFirstName,
+          lastName: newStudentLastName,
+          birthDate: newStudentBirthDate,
+          studentClass: newStudentClass,
+          courses,
+          grades
+        })
       });
 
       if (response.ok) {
-        setNewStudentName('');
-        setNewStudentCourse('');
+        setNewStudentFirstName('');
+        setNewStudentLastName('');
+        setNewStudentBirthDate('');
+        setNewStudentClass('');
+        setNewStudentCourses('');
+        setNewStudentGrades('');
         fetchStudents(); // Refresh the list
       } else {
         throw new Error('Failed to add student');
@@ -98,24 +124,67 @@ const App = () => {
             <h2 className="text-3xl font-semibold mb-6 text-white">Add New Student</h2>
             <form onSubmit={handleAddStudent} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
               <div className="col-span-1">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">Student Name</label>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
                 <input
                   type="text"
-                  id="name"
-                  value={newStudentName}
-                  onChange={(e) => setNewStudentName(e.target.value)}
+                  id="firstName"
+                  value={newStudentFirstName}
+                  onChange={(e) => setNewStudentFirstName(e.target.value)}
                   placeholder="e.g., Mike"
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
               <div className="col-span-1">
-                <label htmlFor="course" className="block text-sm font-medium text-gray-300 mb-2">Course</label>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">Last Name</label>
                 <input
                   type="text"
-                  id="course"
-                  value={newStudentCourse}
-                  onChange={(e) => setNewStudentCourse(e.target.value)}
-                  placeholder="e.g., Math"
+                  id="lastName"
+                  value={newStudentLastName}
+                  onChange={(e) => setNewStudentLastName(e.target.value)}
+                  placeholder="e.g., Smith"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                />
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-300 mb-2">Birth Date</label>
+                <input
+                  type="date"
+                  id="birthDate"
+                  value={newStudentBirthDate}
+                  onChange={(e) => setNewStudentBirthDate(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                />
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="studentClass" className="block text-sm font-medium text-gray-300 mb-2">Class</label>
+                <input
+                  type="text"
+                  id="studentClass"
+                  value={newStudentClass}
+                  onChange={(e) => setNewStudentClass(e.target.value)}
+                  placeholder="e.g., Computer Science"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                />
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="courses" className="block text-sm font-medium text-gray-300 mb-2">Courses (comma-separated)</label>
+                <input
+                  type="text"
+                  id="courses"
+                  value={newStudentCourses}
+                  onChange={(e) => setNewStudentCourses(e.target.value)}
+                  placeholder="e.g., Math, Science"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                />
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="grades" className="block text-sm font-medium text-gray-300 mb-2">Grades (e.g., Math:A,Science:B)</label>
+                <input
+                  type="text"
+                  id="grades"
+                  value={newStudentGrades}
+                  onChange={(e) => setNewStudentGrades(e.target.value)}
+                  placeholder="e.g., Math:A,Science:B"
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
@@ -135,15 +204,30 @@ const App = () => {
                 {students.map(student => (
                   <div key={student.id} className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col justify-between transition transform hover:-translate-y-2">
                     <div>
-                      <h3 className="text-2xl font-bold text-cyan-400">{student.name}</h3>
-                      <p className="text-gray-400 mt-1">{student.course}</p>
+                      <h3 className="text-2xl font-bold text-cyan-400">{student.firstName} {student.lastName}</h3>
+                      <p className="text-gray-400 mt-1">Birth Date: {student.birthDate}</p>
+                      <p className="text-gray-400 mt-1">Class: {student.studentClass}</p>
+                      <p className="text-gray-400 mt-1">Courses: {student.courses.join(', ')}</p>
+                      <div className="text-gray-400 mt-1">
+                        Grades:
+                        <ul className="list-disc list-inside">
+                          {Object.entries(student.grades).map(([course, grade]) => (
+                            <li key={course}>{course}: {grade}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => handleDeleteStudent(student.id)}
-                      className="mt-6 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg self-end transition duration-300"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex justify-end gap-4 mt-6">
+                      <Link to={`/update/${student.id}`} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                        Update
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteStudent(student.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -153,6 +237,15 @@ const App = () => {
         </main>
       </div>
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<StudentList />} />
+      <Route path="/update/:id" element={<UpdateStudent />} />
+    </Routes>
   );
 };
 

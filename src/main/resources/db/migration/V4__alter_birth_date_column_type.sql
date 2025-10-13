@@ -1,0 +1,1 @@
+ALTER TABLE students ALTER COLUMN birth_date VARCHAR(255);
