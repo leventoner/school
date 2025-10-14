@@ -1,26 +1,56 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Header = ({ currentUser, logOut }) => {
+// Define interfaces for props and types used
+interface User {
+  id: number;
+  username: string;
+  roles: string[];
+}
+
+interface HeaderProps {
+  currentUser: User | undefined;
+  logOut: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ currentUser, logOut }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  const activeLinkStyle = {
-    color: '#22d3ee',
-    borderBottom: '2px solid #22d3ee'
-  };
+  // Removed activeLinkStyle as it's not directly used in the current implementation
+  // const activeLinkStyle = {
+  //   color: '#22d3ee',
+  //   borderBottom: '2px solid #22d3ee'
+  // };
 
-  const handleLinkClick = (path) => {
+  const handleLinkClick = (path: string) => {
     console.log(`Navigating to: ${path}`);
     setIsOpen(false);
     navigate(path);
   };
 
+  // Helper to determine if a link should be active
+  const getLinkClassName = (linkPath: string): string => {
+    const baseClasses = "py-2 transition-colors duration-300 hover:text-cyan-400 cursor-pointer";
+    if (window.location.pathname === linkPath) {
+      return `${baseClasses} text-cyan-400 border-b-2 border-cyan-400`;
+    }
+    return baseClasses;
+  };
+
+  const getMobileLinkClassName = (linkPath: string): string => {
+    const baseClasses = "block py-2 px-4 text-center rounded-md transition-colors duration-300 hover:bg-gray-700 cursor-pointer";
+    if (window.location.pathname === linkPath) {
+      return `${baseClasses} bg-gray-700`;
+    }
+    return baseClasses;
+  };
+
   return (
     <header className="bg-gray-800/80 backdrop-blur-sm text-white shadow-lg sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center p-4">
-        <div 
-          onClick={() => handleLinkClick('/')} 
+        <div
+          onClick={() => handleLinkClick('/')}
           className="text-3xl font-black tracking-wider text-cyan-400 cursor-pointer"
         >
           SMS
@@ -33,20 +63,20 @@ const Header = ({ currentUser, logOut }) => {
           </button>
         </div>
         <nav className="hidden md:flex items-center space-x-6 text-lg">
-          <div 
+          <div
             onClick={() => handleLinkClick('/')}
-            className={`py-2 transition-colors duration-300 hover:text-cyan-400 cursor-pointer ${window.location.pathname === '/' ? 'text-cyan-400 border-b-2 border-cyan-400' : ''}`}
+            className={getLinkClassName('/')}
           >
             Home
           </div>
-          <div 
+          <div
             onClick={() => handleLinkClick('/students')}
-            className={`py-2 transition-colors duration-300 hover:text-cyan-400 cursor-pointer ${window.location.pathname === '/students' ? 'text-cyan-400 border-b-2 border-cyan-400' : ''}`}
+            className={getLinkClassName('/students')}
           >
             Students
           </div>
           {currentUser && (
-            <div 
+            <div
               onClick={() => handleLinkClick('/add')}
               className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-5 rounded-full transition duration-300 cursor-pointer"
             >
@@ -54,23 +84,23 @@ const Header = ({ currentUser, logOut }) => {
             </div>
           )}
           {currentUser ? (
-            <div 
+            <div
               onClick={() => { logOut(); handleLinkClick('/login'); }}
-              className="py-2 transition-colors duration-300 hover:text-cyan-400 cursor-pointer"
+              className={getLinkClassName('/login')} // Reusing getLinkClassName for logout link style
             >
               Logout
             </div>
           ) : (
             <>
-              <div 
+              <div
                 onClick={() => handleLinkClick('/login')}
-                className={`py-2 transition-colors duration-300 hover:text-cyan-400 cursor-pointer ${window.location.pathname === '/login' ? 'text-cyan-400 border-b-2 border-cyan-400' : ''}`}
+                className={getLinkClassName('/login')}
               >
                 Login
               </div>
-              <div 
+              <div
                 onClick={() => handleLinkClick('/register')}
-                className={`py-2 transition-colors duration-300 hover:text-cyan-400 cursor-pointer ${window.location.pathname === '/register' ? 'text-cyan-400 border-b-2 border-cyan-400' : ''}`}
+                className={getLinkClassName('/register')}
               >
                 Sign Up
               </div>
@@ -81,20 +111,20 @@ const Header = ({ currentUser, logOut }) => {
       {isOpen && (
         <div className="md:hidden">
           <nav className="px-2 pt-2 pb-4 space-y-2">
-            <div 
+            <div
               onClick={() => handleLinkClick('/')}
-              className={`block py-2 px-4 text-center rounded-md transition-colors duration-300 hover:bg-gray-700 cursor-pointer ${window.location.pathname === '/' ? 'bg-gray-700' : ''}`}
+              className={getMobileLinkClassName('/')}
             >
               Home
             </div>
-            <div 
+            <div
               onClick={() => handleLinkClick('/students')}
-              className={`block py-2 px-4 text-center rounded-md transition-colors duration-300 hover:bg-gray-700 cursor-pointer ${window.location.pathname === '/students' ? 'bg-gray-700' : ''}`}
+              className={getMobileLinkClassName('/students')}
             >
               Students
             </div>
             {currentUser && (
-              <div 
+              <div
                 onClick={() => handleLinkClick('/add')}
                 className="block bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-5 rounded-full transition duration-300 w-full text-center cursor-pointer"
               >
@@ -102,23 +132,23 @@ const Header = ({ currentUser, logOut }) => {
               </div>
             )}
             {currentUser ? (
-              <div 
+              <div
                 onClick={() => { logOut(); handleLinkClick('/login'); }}
-                className="block py-2 px-4 text-center rounded-md transition-colors duration-300 hover:bg-gray-700 cursor-pointer"
+                className={getMobileLinkClassName('/login')} // Reusing getMobileLinkClassName for logout link style
               >
                 Logout
               </div>
             ) : (
               <>
-                <div 
+                <div
                   onClick={() => handleLinkClick('/login')}
-                  className={`block py-2 px-4 text-center rounded-md transition-colors duration-300 hover:bg-gray-700 cursor-pointer ${window.location.pathname === '/login' ? 'bg-gray-700' : ''}`}
+                  className={getMobileLinkClassName('/login')}
                 >
                   Login
                 </div>
-                <div 
+                <div
                   onClick={() => handleLinkClick('/register')}
-                  className={`block py-2 px-4 text-center rounded-md transition-colors duration-300 hover:bg-gray-700 cursor-pointer ${window.location.pathname === '/register' ? 'bg-gray-700' : ''}`}
+                  className={getMobileLinkClassName('/register')}
                 >
                   Sign Up
                 </div>

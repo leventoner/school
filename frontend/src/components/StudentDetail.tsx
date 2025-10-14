@@ -1,14 +1,40 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Import useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import AuthService from '../services/AuthService'; // Import AuthService
+import AuthService from '../services/AuthService';
+
+// Define interfaces for types used in the component
+// interface User {
+//   id: number;
+//   username: string;
+//   roles: string[];
+// }
+
+interface AuthHeader {
+  Authorization: string;
+}
+
+interface Grades {
+  [key: string]: string;
+}
+
+interface Student {
+  id: number;
+  firstName: string;
+  lastName: string;
+  schoolNumber?: string | null;
+  birthDate: string;
+  studentClass?: string | null;
+  courses: string[];
+  grades: Grades;
+}
 
 const API_URL = 'http://localhost:8083/api/students';
 
-const StudentDetail = () => {
-    const [student, setStudent] = useState(null);
+const StudentDetail: React.FC = () => {
+    const [student, setStudent] = useState<Student | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const { id } = useParams();
+    const [error, setError] = useState<string | null>(null);
+    const { id } = useParams<{ id: string }>(); // useParams returns string for route params
     const navigate = useNavigate();
 
     // Redirect to login if not authenticated
@@ -21,10 +47,12 @@ const StudentDetail = () => {
 
     const fetchStudent = useCallback(async () => {
         setIsLoading(true);
+        setError(null); // Clear previous errors
         try {
+            const authHeader: AuthHeader = AuthService.getAuthHeader();
             const response = await fetch(`${API_URL}/${id}`, {
                 headers: {
-                    'Authorization': AuthService.getAuthHeader().Authorization, // Use JWT token
+                    'Authorization': authHeader.Authorization, // Use JWT token
                     'Content-Type': 'application/json'
                 }
             });
@@ -39,9 +67,9 @@ const StudentDetail = () => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const data = await response.json();
+            const data: Student = await response.json();
             setStudent(data);
-        } catch (e) {
+        } catch (e: any) { // Catch any type for broader error handling
             setError('Could not fetch student data. Please check your connection or login status.');
             console.error(e);
         } finally {
@@ -56,10 +84,11 @@ const StudentDetail = () => {
     const handleDeleteStudent = async () => {
         if (window.confirm('Are you sure you want to delete this student?')) {
             try {
+                const authHeader: AuthHeader = AuthService.getAuthHeader();
                 const response = await fetch(`${API_URL}/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': AuthService.getAuthHeader().Authorization, // Use JWT token
+                        'Authorization': authHeader.Authorization, // Use JWT token
                         'Content-Type': 'application/json'
                     }
                 });
@@ -72,9 +101,18 @@ const StudentDetail = () => {
                 if (response.ok) {
                     navigate('/students'); // Redirect to student list after successful deletion
                 } else {
-                    throw new Error('Failed to delete student');
+                    // Attempt to parse error message from backend if available
+                    let errorMessage = 'Failed to delete student';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (parseError) {
+                        // Ignore if error response is not JSON
+                    }
+                    setError(errorMessage);
+                    console.error(`Delete failed: ${response.status}`);
                 }
-            } catch (e) {
+            } catch (e: any) {
                 setError('Could not delete student. Please check your connection or login status.');
                 console.error(e);
             }
@@ -83,7 +121,8 @@ const StudentDetail = () => {
 
     // Check if the current user has ADMIN or MODERATOR roles
     const currentUser = AuthService.getCurrentUser();
-    const userRoles = currentUser ? currentUser.roles : [];
+    // Safely access roles, defaulting to an empty array if currentUser or currentUser.roles is null/undefined
+    const userRoles = currentUser?.roles ?? [];
     const canEditOrDelete = userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_MODERATOR');
 
     if (isLoading) {
@@ -104,12 +143,12 @@ const StudentDetail = () => {
                 <h2 className="text-3xl font-semibold text-gray-800 mb-4">{student.firstName} {student.lastName}</h2>
                 {canEditOrDelete && ( // Conditionally render Edit and Delete buttons
                     <div className="flex items-center">
-                        <Link to={`/update/${student.id}`} className="text-blue-500 hover:text-blue-700 font-semibold mr-4">
+                        <Link to={`/update/${student.id}`} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4">
                             Edit
                         </Link>
                         <button
                             onClick={handleDeleteStudent}
-                            className="text-red-500 hover:text-red-700 font-semibold"
+                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                         >
                             Delete
                         </button>

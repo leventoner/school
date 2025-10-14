@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Home = () => {
+const Home: React.FC = () => {
   return (
     <div className="text-white">
       <div className="bg-gray-800 p-8 rounded-xl shadow-lg mb-12 text-center">

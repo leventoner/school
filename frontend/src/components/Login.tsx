@@ -1,45 +1,50 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AuthService from "../services/AuthService";
 
-const Register = () => {
+// Define interfaces for props and types used
+interface LoginProps {
+  onLogin: (userData: LoginResponse) => void;
+}
+
+interface LoginResponse {
+  username: string;
+  accessToken: string;
+  tokenType: string;
+  id?: number;
+  roles?: string[];
+}
+
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  let navigate = useNavigate();
+
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [successful, setSuccessful] = useState(false);
+  const [message, setMessage] = useState<string | null>(null); // State for error messages
 
-  const onChangeUsername = (e) => {
+  const onChangeUsername = (e: React.ChangeEvent<HTMLInputElement>) => {
     const username = e.target.value;
     setUsername(username);
   };
 
-  const onChangeEmail = (e) => {
-    const email = e.target.value;
-    setEmail(email);
-  };
-
-  const onChangePassword = (e) => {
+  const onChangePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
     const password = e.target.value;
     setPassword(password);
   };
 
-  const handleRegister = async (e) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setMessage("");
+    setMessage(null); // Clear previous messages
     setLoading(true);
-    setSuccessful(false);
 
     try {
-      const response = await AuthService.register(username, email, password);
-      setMessage(response.data.message);
-      setSuccessful(true);
-      // Redirect to login page after successful registration
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 2000); // Redirect after 2 seconds
-    } catch (error) {
+      // Assuming AuthService.login returns data compatible with the onLogin prop
+      const data = await AuthService.login(username, password);
+      onLogin(data); // Call the prop passed from App.tsx
+      navigate("/"); // Navigate to the home page after successful login
+    } catch (error: any) { // Catch any type for broader error handling
       const resMessage =
         (error.response &&
           error.response.data &&
@@ -47,10 +52,8 @@ const Register = () => {
         error.message ||
         error.toString();
 
-      setMessage(resMessage);
-      setSuccessful(false);
-    } finally {
       setLoading(false);
+      setMessage(resMessage);
     }
   };
 
@@ -59,10 +62,10 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            Sign in to your account
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleRegister}>
+        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="username" className="sr-only">
@@ -78,22 +81,6 @@ const Register = () => {
                 placeholder="Username"
                 value={username}
                 onChange={onChangeUsername}
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={onChangeEmail}
               />
             </div>
             <div>
@@ -115,18 +102,12 @@ const Register = () => {
           </div>
 
           {message && (
-            <div className={successful ? "rounded-md bg-green-50 p-4" : "rounded-md bg-red-50 p-4"}>
+            <div className="rounded-md bg-red-50 p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  {successful ? (
-                    <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.574a.75.75 0 00-1.055-1.055L6.75 11.757 5.374 10.373a.75.75 0 00-1.06 1.06l1.875 1.875a.75.75 0 001.06 0l3.875-3.875z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.286 7.286a.75.75 0 00-1.06 1.06L9.44 10l-2.154 2.154a.75.75 0 101.06 1.06L10.56 11.06l2.154 2.154a.75.75 0 101.06-1.06L11.614 10l2.154-2.154a.75.75 0 00-1.06-1.06L10.56 8.94 8.286 7.286z" clipRule="evenodd" />
-                    </svg>
-                  )}
+                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.286 7.286a.75.75 0 00-1.06 1.06L9.44 10l-2.154 2.154a.75.75 0 101.06 1.06L10.56 11.06l2.154 2.154a.75.75 0 101.06-1.06L11.614 10l2.154-2.154a.75.75 0 00-1.06-1.06L10.56 8.94 8.286 7.286z" clipRule="evenodd" />
+                  </svg>
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-red-700">
@@ -151,7 +132,7 @@ const Register = () => {
                   </svg>
                 </span>
               )}
-              Sign Up
+              Login
             </button>
           </div>
         </form>
@@ -160,4 +141,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Login;

@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.entity.ERole;
-import com.example.entity.Role;
 import com.example.entity.User;
 import com.example.payload.request.LoginRequest;
 import com.example.payload.request.SignupRequest;
@@ -65,6 +63,7 @@ public class AuthController {
         .map(item -> item.getAuthority())
         .collect(Collectors.toList());
 
+    // Returning JwtResponse with 'token' field
     return ResponseEntity.ok(new JwtResponse(jwt, 
                          userDetails.getId(), 
                          userDetails.getUsername(), 
@@ -91,34 +90,27 @@ public class AuthController {
                signUpRequest.getEmail(),
                encoder.encode(signUpRequest.getPassword()));
 
+    // Simplified role assignment logic
     Set<String> strRoles = signUpRequest.getRole();
-    Set<Role> roles = new HashSet<>();
+    Set<com.example.entity.Role> roles = new HashSet<>();
 
-    if (strRoles == null) {
-      Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-          .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-      roles.add(userRole);
+    if (strRoles == null || strRoles.isEmpty()) {
+        com.example.entity.Role userRole = roleRepository.findByName(com.example.entity.ERole.ROLE_USER)
+            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+        roles.add(userRole);
     } else {
-      strRoles.forEach(role -> {
-        switch (role) {
-        case "admin":
-          Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-              .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-          roles.add(adminRole);
-
-          break;
-        case "mod":
-          Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
-              .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-          roles.add(modRole);
-
-          break;
-        default:
-          Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-              .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-          roles.add(userRole);
-        }
-      });
+        strRoles.forEach(role -> {
+            switch (role.toLowerCase()) { // Case-insensitive role matching
+                case "admin":
+                    roles.add(roleRepository.findByName(com.example.entity.ERole.ROLE_ADMIN).orElseThrow(() -> new RuntimeException("Error: Role is not found.")));
+                    break;
+                case "mod":
+                    roles.add(roleRepository.findByName(com.example.entity.ERole.ROLE_MODERATOR).orElseThrow(() -> new RuntimeException("Error: Role is not found.")));
+                    break;
+                default: // Default to ROLE_USER if role is not recognized or empty
+                    roles.add(roleRepository.findByName(com.example.entity.ERole.ROLE_USER).orElseThrow(() -> new RuntimeException("Error: Role is not found.")));
+            }
+        });
     }
 
     user.setRoles(roles);

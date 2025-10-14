@@ -1,51 +1,60 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AuthService from '../services/AuthService'; // Import AuthService
+import AuthService from '../services/AuthService';
+
+// Define interfaces for types used in the component
+// interface User {
+//   id: number;
+//   username: string;
+//   roles: string[];
+// }
+
+// interface AuthHeader {
+//   Authorization: string;
+// }
+
+interface Student {
+  id: number;
+  firstName: string;
+  lastName: string;
+  schoolNumber?: string | null;
+  birthDate: string; // Assuming date is stored as string
+  studentClass?: string | null;
+  courses: string[];
+  grades: { [key: string]: string }; // Assuming grades is an object with string keys and string values
+}
 
 const API_URL = 'http://localhost:8083/api/students';
 
-const StudentList = () => {
-  const [students, setStudents] = useState([]);
+const StudentList: React.FC = () => {
+  const [students, setStudents] = useState<Student[]>([]); // Explicitly type students as an array of Student
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
+    setError(null); // Clear previous errors
     try {
-      const user = AuthService.getCurrentUser();
-      if (!user) {
-        // If no user is logged in, redirect to login page
-        navigate('/login');
-        return;
-      }
-
+      // Removed user check and auth header for public access to student list
       const response = await fetch(API_URL, {
         headers: {
-          'Authorization': AuthService.getAuthHeader().Authorization, // Use JWT token
           'Content-Type': 'application/json'
         }
       });
 
-      if (response.status === 401 || response.status === 403) {
-        // If unauthorized or forbidden, clear user data and redirect to login
-        AuthService.logout();
-        navigate('/login');
-        return;
-      }
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
+      const data: Student[] = await response.json(); // Expecting an array of students
       setStudents(data);
-    } catch (e) {
-      setError('Could not fetch students. Please check your connection or login status.');
+    } catch (e: any) { // Catch any type for broader error handling
+      setError('Could not fetch students. Please check your connection.');
       console.error(e);
     } finally {
       setIsLoading(false);
     }
-  }, [navigate]); // Include navigate in dependencies
+  }, []); // Removed navigate from dependencies as it's no longer used here
 
   useEffect(() => {
     fetchStudents();
@@ -53,7 +62,8 @@ const StudentList = () => {
 
   // Check if the current user has ADMIN or MODERATOR roles
   const currentUser = AuthService.getCurrentUser();
-  const userRoles = currentUser ? currentUser.roles : [];
+  // Safely access roles, defaulting to an empty array if currentUser or currentUser.roles is null/undefined
+  const userRoles = currentUser?.roles ?? [];
   const canAddStudent = userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_MODERATOR');
 
   return (
@@ -69,7 +79,7 @@ const StudentList = () => {
       {isLoading && <p className="text-center text-gray-500">Loading students...</p>}
       {error && <p className="text-center text-red-500">{error}</p>}
       {!isLoading && !error && students.length === 0 && (
-        <p className="text-center text-gray-500 mt-8">No students found. Add one!</p>
+        <p className="text-center text-gray-500 mt-8">No students found.</p>
       )}
       {!isLoading && !error && students.length > 0 && (
         <div className="bg-white shadow-md rounded-lg">

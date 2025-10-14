@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import AuthService from '../services/AuthService'; // Import AuthService
 
-const Footer = () => {
+const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-800 text-white p-6 mt-12 shadow-inner">
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
@@ -9,7 +10,16 @@ const Footer = () => {
         <div className="flex space-x-6">
           <Link to="/" className="hover:text-cyan-400 transition-colors duration-300">Home</Link>
           <Link to="/students" className="hover:text-cyan-400 transition-colors duration-300">Students</Link>
-          <Link to="/add" className="hover:text-cyan-400 transition-colors duration-300">Add Student</Link>
+          {/* Conditionally render Add Student link */}
+          {(() => {
+            const currentUser = AuthService.getCurrentUser();
+            if (currentUser) {
+              return (
+                <Link to="/add" className="hover:text-cyan-400 transition-colors duration-300">Add Student</Link>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
     </footer>

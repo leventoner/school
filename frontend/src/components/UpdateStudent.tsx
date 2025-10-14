@@ -1,10 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import AuthService from '../services/AuthService'; // Import AuthService
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import AuthService from '../services/AuthService';
+
+// Define the interface for the Student object
+interface Student {
+  id: number;
+  firstName: string;
+  lastName: string;
+  schoolNumber?: string;
+  birthDate: string;
+  studentClass?: string;
+  courses: string[];
+  grades: { [key: string]: string };
+}
+
+// Define the type for the current user from AuthService
+interface CurrentUser {
+  id: number;
+  username: string;
+  email: string;
+  roles: string[];
+}
+
+// Define the type for the authorization header
+interface AuthHeader {
+  Authorization: string;
+}
 
 const API_URL = 'http://localhost:8083/api/students';
 
-const UpdateStudent = () => {
+const UpdateStudent: React.FC = () => {
+  const [student, setStudent] = useState<Student | null>(null); // State for the fetched student data
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [schoolNumber, setSchoolNumber] = useState('');
@@ -12,61 +38,66 @@ const UpdateStudent = () => {
   const [studentClass, setStudentClass] = useState('');
   const [courses, setCourses] = useState('');
   const [grades, setGrades] = useState('');
-  const [error, setError] = useState(null);
-  const { id } = useParams();
+  const [error, setError] = useState<string | null>(null);
+  const { id } = useParams<{ id: string }>(); // Type for useParams to get the student ID
   const navigate = useNavigate();
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    const user = AuthService.getCurrentUser();
+    const user = AuthService.getCurrentUser() as CurrentUser | null;
     if (!user) {
       navigate('/login');
     }
   }, [navigate]);
 
   // Fetch student data for pre-population
-  useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const response = await fetch(`${API_URL}/${id}`, {
-          headers: {
-            'Authorization': AuthService.getAuthHeader().Authorization,
-            'Content-Type': 'application/json'
-          }
-        });
+  const fetchStudentData = useCallback(async () => {
+    try {
+      // Type assertion for getAuthHeader, assuming it returns an object with Authorization property
+      const authHeader = AuthService.getAuthHeader() as AuthHeader;
 
-        if (response.status === 401 || response.status === 403) {
-          AuthService.logout();
-          navigate('/login');
-          return;
+      const response = await fetch(`${API_URL}/${id}`, {
+        headers: {
+          'Authorization': authHeader.Authorization,
+          'Content-Type': 'application/json'
         }
+      });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setFirstName(data.firstName || '');
-        setLastName(data.lastName || '');
-        setSchoolNumber(data.schoolNumber || '');
-        setBirthDate(data.birthDate || '');
-        setStudentClass(data.studentClass || '');
-        setCourses(data.courses ? data.courses.join(', ') : '');
-        setGrades(data.grades ? Object.entries(data.grades).map(([key, value]) => `${key}:${value}`).join(',') : '');
-      } catch (e) {
-        setError('Could not fetch student data. Please check your connection or login status.');
-        console.error(e);
+      if (response.status === 401 || response.status === 403) {
+        // If unauthorized or forbidden, clear user data and redirect to login
+        AuthService.logout();
+        navigate('/login');
+        return;
       }
-    };
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: Student = await response.json();
+      setStudent(data); // Set the fetched student data
+      setFirstName(data.firstName || '');
+      setLastName(data.lastName || '');
+      setSchoolNumber(data.schoolNumber || '');
+      setBirthDate(data.birthDate || '');
+      setStudentClass(data.studentClass || '');
+      setCourses(data.courses ? data.courses.join(', ') : '');
+      setGrades(data.grades ? Object.entries(data.grades).map(([key, value]) => `${key}:${value}`).join(',') : '');
+    } catch (e) {
+      setError('Could not fetch student data. Please check your connection or login status.');
+      console.error(e);
+    }
+  }, [id, navigate]); // Dependencies for useCallback
+
+  useEffect(() => {
     fetchStudentData();
-  }, [id, navigate]);
+  }, [fetchStudentData]); // Fetch data when the component mounts or id/navigate changes
 
   // Check if the current user has ADMIN or MODERATOR roles
-  const currentUser = AuthService.getCurrentUser();
+  const currentUser = AuthService.getCurrentUser() as CurrentUser | null;
   const userRoles = currentUser ? currentUser.roles : [];
   const canUpdateStudent = userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_MODERATOR');
 
-  const handleUpdateStudent = async (e) => {
+  const handleUpdateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // If the user doesn't have the required role, prevent submission
@@ -75,13 +106,15 @@ const UpdateStudent = () => {
       return;
     }
 
+    // Basic validation for required fields
     if (!firstName || !lastName || !schoolNumber || !birthDate || !courses) {
       alert('Please fill in all required fields.');
       return;
     }
 
-    const coursesArray = courses.split(',').map(course => course.trim());
-    const gradesObject = grades.split(',').reduce((acc, grade) => {
+    // Process courses and grades from string inputs
+    const coursesArray = courses.split(',').map(course => course.trim()).filter(Boolean); // Filter out empty strings
+    const gradesObject = grades.split(',').reduce((acc: { [key: string]: string }, grade) => {
       const [key, value] = grade.split(':');
       if (key && value) {
         acc[key.trim()] = value.trim();
@@ -90,17 +123,26 @@ const UpdateStudent = () => {
     }, {});
 
     try {
+      const authHeader = AuthService.getAuthHeader() as AuthHeader;
+
+      // Ensure student object is not null before accessing its properties for the update
+      if (!student) {
+        setError('Student data is missing. Cannot update.');
+        return;
+      }
+
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': AuthService.getAuthHeader().Authorization // Use JWT token
+          'Authorization': authHeader.Authorization
         },
         body: JSON.stringify({
+          id: student.id, // Use the ID from the fetched student data
           firstName,
           lastName,
           schoolNumber,
-          birthDate,
+          birthDate: birthDate,
           studentClass,
           courses: coursesArray,
           grades: gradesObject
@@ -112,10 +154,18 @@ const UpdateStudent = () => {
       } else if (response.status === 403) {
         setError('You do not have permission to update this student.');
       } else {
-        throw new Error('Failed to update student');
+        // Attempt to parse error message from response if available
+        let errorMessage = 'Failed to update student';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          // Ignore if response is not JSON or empty
+        }
+        throw new Error(errorMessage);
       }
     } catch (e) {
-      setError('Could not update student. Please check your connection or login status.');
+      setError((e as Error).message || 'Could not update student. Please check your connection or login status.');
       console.error(e);
     }
   };
@@ -127,6 +177,14 @@ const UpdateStudent = () => {
         You do not have permission to access this page. Please log in with an appropriate account.
       </div>
     );
+  }
+
+  // Render loading or error states
+  if (!student) { // This check is technically redundant if fetchStudentData is called and sets student, but good for safety
+    return <p className="text-center text-gray-500">Loading student details...</p>;
+  }
+  if (error) {
+    return <p className="text-center text-red-500">{error}</p>;
   }
 
   // Render the form if the user has the necessary role and data is loaded

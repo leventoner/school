@@ -13,11 +13,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.http.HttpMethod; // Import HttpMethod
-import org.springframework.web.cors.CorsConfiguration; // Import CorsConfiguration
-import org.springframework.web.cors.CorsConfigurationSource; // Import CorsConfigurationSource
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource; // Import UrlBasedCorsConfigurationSource
-import java.util.List; // Import List
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import com.example.security.jwt.AuthEntryPointJwt;
 import com.example.security.jwt.AuthTokenFilter;
@@ -57,6 +56,28 @@ public class SecurityConfig {
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
+
+  // CORS Configuration Bean
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+      CorsConfiguration configuration = new CorsConfiguration();
+      configuration.setAllowedOrigins(java.util.Arrays.asList("http://localhost:3000")); // Allow frontend origin
+      configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+      configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
+      configuration.setExposedHeaders(java.util.Arrays.asList("Authorization")); // Expose Authorization header
+      configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
+      configuration.setMaxAge(3600L); // Cache preflight response for 1 hour
+
+      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+      source.registerCorsConfiguration("/**", configuration); // Apply to all paths
+      return source;
+  }
+
+  // CorsFilter Bean to apply CORS configuration
+  @Bean
+  public CorsFilter corsFilter() {
+      return new CorsFilter(corsConfigurationSource());
+  }
   
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -64,44 +85,18 @@ public class SecurityConfig {
         .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> 
-          auth.requestMatchers("/api/auth/**").permitAll() // Allow public access for authentication endpoints
-              .requestMatchers(HttpMethod.GET, "/", "/api/students").permitAll() // Allow public access for home and student list (GET)
-              .requestMatchers(HttpMethod.GET, "/api/students/{id}").permitAll() // Allow public access for student details (GET)
-              .requestMatchers(HttpMethod.POST, "/api/students").hasAnyRole("ADMIN", "MODERATOR") // Require ADMIN or MODERATOR role for adding students
-              .requestMatchers(HttpMethod.PUT, "/api/students/{id}").hasAnyRole("ADMIN", "MODERATOR") // Require ADMIN or MODERATOR role for editing students
-              .requestMatchers(HttpMethod.DELETE, "/api/students/{id}").hasAnyRole("ADMIN", "MODERATOR") // Require ADMIN or MODERATOR role for deleting students
-              .anyRequest().authenticated() // All other requests require authentication
+          auth.requestMatchers("/api/auth/**").permitAll()
+              .requestMatchers("/api/test/**").permitAll()
+              .requestMatchers("/api/students/**").permitAll() // Allow public access to all student endpoints
+              .anyRequest().authenticated()
         );
-    
-    // Add CORS configuration
-    http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
     
     http.authenticationProvider(authenticationProvider());
 
+    // Add the CorsFilter before the AuthTokenFilter
+    http.addFilterBefore(corsFilter(), CorsFilter.class); // Use CorsFilter here
     http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     
     return http.build();
-  }
-
-  // Bean for CORS configuration
-  @Bean
-  public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration configuration = new CorsConfiguration();
-    // Allow requests from the frontend origin (adjust port if necessary)
-    configuration.setAllowedOrigins(List.of("http://localhost:3000")); 
-    // Allowed HTTP methods
-    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); 
-    // Allowed headers, including Authorization
-    configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); 
-    // Expose Authorization header to the frontend
-    configuration.setExposedHeaders(List.of("Authorization")); 
-    // Allow credentials (e.g., cookies, though not directly used for JWT here)
-    configuration.setAllowCredentials(true); 
-    // Cache preflight requests for 1 hour
-    configuration.setMaxAge(3600L); 
-
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration); // Apply to all paths
-    return source;
   }
 }

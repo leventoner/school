@@ -2,6 +2,7 @@ package com.example.security.jwt;
 
 import java.io.IOException;
 
+import org.springframework.lang.NonNull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,13 +30,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
   private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
   @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+  protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
       throws ServletException, IOException {
     try {
       String jwt = parseJwt(request);
-      logger.info("Parsed JWT: {}", jwt); // Added log for parsed JWT
+      // Removed verbose info logs for JWT parsing and validation result
       boolean isValid = jwt != null && jwtUtils.validateJwtToken(jwt);
-      logger.info("JWT validation result: {}", isValid); // Added log for validation result
 
       if (isValid) {
         String username = jwtUtils.getUserNameFromJwtToken(jwt);
@@ -51,16 +51,16 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
       }
     } catch (Exception e) {
-      logger.error("Cannot set user authentication: {}", e);
+      logger.error("Cannot set user authentication: {}", e.getMessage(), e); // Added exception and message for better logging
     }
 
     filterChain.doFilter(request, response);
   }
 
-  private String parseJwt(HttpServletRequest request) {
+  private String parseJwt(@NonNull HttpServletRequest request) {
     String headerAuth = request.getHeader("Authorization");
-    logger.info("Raw Authorization header: '{}'", headerAuth); // Log the raw header
-
+    // Removed verbose info log for raw header
+    
     // Make the check case-insensitive for "Bearer "
     if (StringUtils.hasText(headerAuth) && headerAuth.toLowerCase().startsWith("bearer ")) {
       return headerAuth.substring(7);
