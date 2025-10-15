@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
+import { motion } from 'framer-motion';
 
 // Define interfaces for types used in the component
 // interface User {
@@ -66,14 +67,42 @@ const StudentList: React.FC = () => {
   const userRoles = currentUser?.roles ?? [];
   const canAddStudent = userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_MODERATOR');
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+      },
+    },
+  };
+
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-semibold text-gray-800">Enrolled Students</h2>
-        {canAddStudent && ( // Conditionally render the "Add Student" button
-          <Link to="/add" className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
-            Add Student
-          </Link>
+        {canAddStudent && (
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Link to="/add" className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 inline-block">
+              Add Student
+            </Link>
+          </motion.div>
         )}
       </div>
       {isLoading && <p className="text-center text-gray-500">Loading students...</p>}
@@ -83,9 +112,21 @@ const StudentList: React.FC = () => {
       )}
       {!isLoading && !error && students.length > 0 && (
         <div className="bg-white shadow-md rounded-lg">
-          <ul className="divide-y divide-gray-200">
+          <motion.ul
+            className="divide-y divide-gray-200"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {students.map(student => (
-              <li key={student.id} onClick={() => navigate(`/student/${student.id}`)} className="p-4 hover:bg-gray-50 cursor-pointer transition duration-300">
+              <motion.li
+                key={student.id}
+                onClick={() => navigate(`/student/${student.id}`)}
+                className="p-4 hover:bg-gray-50 cursor-pointer"
+                variants={itemVariants}
+                whileHover={{ backgroundColor: "#f9fafb", scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="ml-4">
@@ -94,12 +135,12 @@ const StudentList: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </li>
+              </motion.li>
             ))}
-          </ul>
+          </motion.ul>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

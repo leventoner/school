@@ -61,7 +61,7 @@ const App = () => {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen text-gray-800 font-sans flex flex-col">
+    <div className="min-h-screen text-gray-800 font-sans flex flex-col">
       {/* Pass currentUser to Header. Header expects User type. */}
       <Header currentUser={currentUser} logOut={logOut} />
       <main className="container mx-auto p-8 flex-grow">

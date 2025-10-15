@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
+import { motion } from 'framer-motion';
 
 // Define interfaces for types used in the component
 interface User {
@@ -51,7 +52,7 @@ const AddStudent: React.FC = () => {
 
   // Check if the current user has ADMIN or MODERATOR roles
   const currentUser = AuthService.getCurrentUser();
-  const userRoles = currentUser ? currentUser.roles : [];
+  const userRoles = currentUser?.roles ?? [];
   const canAddStudent = userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_MODERATOR');
 
   const handleAddStudent = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -130,8 +131,18 @@ const AddStudent: React.FC = () => {
     );
   }
 
+  const formVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  };
+
   return (
-    <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto">
+    <motion.div
+      className="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto"
+      variants={formVariants}
+      initial="hidden"
+      animate="visible"
+    >
       <h2 className="text-3xl font-semibold mb-6 text-gray-800">Add New Student</h2>
       {error && <p className="text-center text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleAddStudent} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -144,7 +155,7 @@ const AddStudent: React.FC = () => {
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="e.g., Mike"
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required // Added required attribute
+            required
           />
         </div>
         <div>
@@ -156,7 +167,7 @@ const AddStudent: React.FC = () => {
             onChange={(e) => setLastName(e.target.value)}
             placeholder="e.g., Smith"
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required // Added required attribute
+            required
           />
         </div>
         <div className="md:col-span-2">
@@ -178,7 +189,7 @@ const AddStudent: React.FC = () => {
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required // Added required attribute
+            required
           />
         </div>
         <div>
@@ -201,7 +212,7 @@ const AddStudent: React.FC = () => {
             onChange={(e) => setCourses(e.target.value)}
             placeholder="e.g., Math, Science"
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required // Added required attribute
+            required
           />
         </div>
         <div className="md:col-span-2">
@@ -216,12 +227,17 @@ const AddStudent: React.FC = () => {
           />
         </div>
         <div className="md:col-span-2 text-right">
-          <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+          <motion.button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             Add Student
-          </button>
+          </motion.button>
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 };
 

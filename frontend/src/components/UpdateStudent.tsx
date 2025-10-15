@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
+import { motion } from 'framer-motion';
 
 // Define the interface for the Student object
 interface Student {
@@ -187,9 +188,19 @@ const UpdateStudent: React.FC = () => {
     return <p className="text-center text-red-500">{error}</p>;
   }
 
+  const formVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  };
+
   // Render the form if the user has the necessary role and data is loaded
   return (
-    <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto">
+    <motion.div
+      className="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto"
+      variants={formVariants}
+      initial="hidden"
+      animate="visible"
+    >
       <h2 className="text-3xl font-semibold mb-6 text-gray-800">Update Student</h2>
       {error && <p className="text-center text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleUpdateStudent} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -270,12 +281,17 @@ const UpdateStudent: React.FC = () => {
           />
         </div>
         <div className="md:col-span-2 text-right">
-          <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+          <motion.button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             Update Student
-          </button>
+          </motion.button>
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 };
 

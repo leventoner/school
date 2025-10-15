@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
+import { motion } from 'framer-motion';
 
 // Define interfaces for types used in the component
 // interface User {
@@ -137,21 +138,37 @@ const StudentDetail: React.FC = () => {
         return <p className="text-center text-gray-500">Student not found.</p>;
     }
 
+    const pageVariants = {
+        hidden: { opacity: 0, x: -200 },
+        visible: { opacity: 1, x: 0, transition: { duration: 0.5 } },
+        exit: { opacity: 0, x: 200, transition: { duration: 0.5 } }
+    };
+
     return (
-        <div className="bg-white shadow-md rounded-lg p-6">
+        <motion.div
+            className="bg-white shadow-md rounded-lg p-6"
+            variants={pageVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+        >
             <div className="flex justify-between items-start">
                 <h2 className="text-3xl font-semibold text-gray-800 mb-4">{student.firstName} {student.lastName}</h2>
-                {canEditOrDelete && ( // Conditionally render Edit and Delete buttons
+                {canEditOrDelete && (
                     <div className="flex items-center">
-                        <Link to={`/update/${student.id}`} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4">
-                            Edit
-                        </Link>
-                        <button
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <Link to={`/update/${student.id}`} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4 inline-block">
+                                Edit
+                            </Link>
+                        </motion.div>
+                        <motion.button
                             onClick={handleDeleteStudent}
                             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
                             Delete
-                        </button>
+                        </motion.button>
                     </div>
                 )}
             </div>
@@ -186,7 +203,7 @@ const StudentDetail: React.FC = () => {
                     &larr; Back to Student List
                 </Link>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
