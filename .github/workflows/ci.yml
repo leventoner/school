@@ -45,13 +45,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: List files in root for debugging
+        run: ls -R
+        working-directory: ${{ github.workspace }}
+
       - name: Build and push backend Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_IMAGE_NAME }}:latest, ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_IMAGE_NAME }}:${{ github.sha }}
-          file: ${{ github.workspace }}/Dockerfile
+          file: ./Dockerfile # Explicitly relative path
 
       - name: Build and push frontend Docker image
         uses: docker/build-push-action@v4
@@ -59,7 +63,7 @@ jobs:
           context: ./frontend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.FRONTEND_IMAGE_NAME }}:latest, ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
-          file: ${{ github.workspace }}/frontend/Dockerfile # Absolute path to Dockerfile
+          file: Dockerfile # Path to Dockerfile relative to the context
 
       # - name: Deploy to server (Example - requires SSH setup and server configuration)
       #   uses: appleboy/ssh-action@master
