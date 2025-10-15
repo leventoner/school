@@ -59,7 +59,7 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_IMAGE_NAME }}:latest, ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_IMAGE_NAME }}:${{ github.sha }}
-          file: ${{ github.workspace }}/Dockerfile # Explicit absolute path
+          file: Dockerfile # Relative to context
 
       - name: Build and push frontend Docker image
         uses: docker/build-push-action@v4
@@ -68,6 +68,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.FRONTEND_IMAGE_NAME }}:latest, ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
           file: Dockerfile # Path to Dockerfile relative to the context
+>>>>>>> Stashed changes
 
       # - name: Deploy to server (Example - requires SSH setup and server configuration)
       #   uses: appleboy/ssh-action@master
