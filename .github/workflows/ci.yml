@@ -49,10 +49,6 @@ jobs:
         run: ls -R
         working-directory: ${{ github.workspace }}
 
-      - name: Print backend Dockerfile content for debugging
-        run: cat Dockerfile
-        working-directory: ${{ github.workspace }}
-
       - name: Build and push backend Docker image
         uses: docker/build-push-action@v4
         with:
@@ -60,7 +56,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_IMAGE_NAME }}:latest, ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_IMAGE_NAME }}:${{ github.sha }}
           file: Dockerfile # Relative to context
-        # working-directory: ${{ github.workspace }} # Removed as it's not needed for 'uses' actions
 
       - name: Build and push frontend Docker image
         uses: docker/build-push-action@v4
@@ -69,7 +64,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.FRONTEND_IMAGE_NAME }}:latest, ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
           file: Dockerfile # Path to Dockerfile relative to the context
-        # working-directory: ${{ github.workspace }}/frontend # Removed as it's not needed for 'uses' actions
 
       # - name: Deploy to server (Example - requires SSH setup and server configuration)
       #   uses: appleboy/ssh-action@master
