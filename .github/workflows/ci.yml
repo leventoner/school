@@ -29,7 +29,6 @@ jobs:
 
       - name: Build backend with Maven
         run: |
-          cd src/main/java/com/example/
           mvn clean package -DskipTests
         working-directory: ${{ github.workspace }} # Ensure commands run from the root
 
