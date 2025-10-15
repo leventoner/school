@@ -12,14 +12,6 @@ import Register from './components/Register';
 import AuthService from './services/AuthService';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Define the User interface based on what AuthService.getCurrentUser() returns.
-// This interface represents the user data without authentication tokens.
-interface User {
-  id: number; // Assuming id is a number based on previous errors
-  username: string;
-  roles: string[]; // e.g., ['ROLE_USER', 'ROLE_ADMIN']
-}
-
 // Define the LoginResponse interface for successful login, which includes tokens.
 // This is the type returned by the login API call.
 interface LoginResponse {
@@ -34,19 +26,27 @@ interface LoginResponse {
 type AllowedRoles = string[];
 
 const App = () => {
-  // Type the currentUser state to hold the User data from AuthService.getCurrentUser().
-  // If AuthService.getCurrentUser() returns tokens, this state should be LoginResponse.
-  // Based on the error, it seems AuthService.getCurrentUser() returns User data only.
+  // Type the currentUser state to hold the LoginResponse data.
+  // AuthService.getCurrentUser() might return a partial object, so we need to be careful.
   const [currentUser, setCurrentUser] = useState<LoginResponse | undefined>(undefined);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = AuthService.getCurrentUser();
-    if (user) {
-      // Set the currentUser state with the full user object from local storage
-      setCurrentUser(user as LoginResponse);
+    const userFromService: any = AuthService.getCurrentUser();
+    // Ensure the user object has the necessary properties before setting state.
+    // We are checking for properties that are part of the LoginResponse interface.
+    // If AuthService.getCurrentUser() returns a type that is not fully LoginResponse,
+    // this check will prevent type errors.
+    if (userFromService && typeof userFromService.id === 'number' && typeof userFromService.username === 'string' && Array.isArray(userFromService.roles) && typeof userFromService.accessToken === 'string') {
+      // Type assertion is safe here because we've checked for the presence and type of required properties
+      setCurrentUser(userFromService as LoginResponse);
+    } else {
+      // If user data is incomplete or missing, clear current user and redirect to login
+      AuthService.logout(); // Clear potentially stale data from localStorage
+      setCurrentUser(undefined);
+      navigate("/login");
     }
-  }, []);
+  }, [navigate]);
 
   const logOut = () => {
     AuthService.logout();
@@ -62,7 +62,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen text-gray-800 font-sans flex flex-col">
-      {/* Pass currentUser to Header. Header expects User type. */}
+      {/* Pass currentUser to Header. Header expects LoginResponse type. */}
       <Header currentUser={currentUser} logOut={logOut} />
       <main className="container mx-auto p-8 flex-grow">
         <Routes>

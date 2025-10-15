@@ -4,11 +4,6 @@ import AuthService from '../services/AuthService';
 import { motion } from 'framer-motion';
 
 // Define interfaces for types used in the component
-interface User {
-  id: number;
-  username: string;
-  roles: string[];
-}
 
 interface AuthHeader {
   Authorization: string;
