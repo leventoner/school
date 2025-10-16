@@ -41,12 +41,11 @@ const App = () => {
       // Type assertion is safe here because we've checked for the presence and type of required properties
       setCurrentUser(userFromService as LoginResponse);
     } else {
-      // If user data is incomplete or missing, clear current user and redirect to login
+      // If user data is incomplete or missing, clear current user
       AuthService.logout(); // Clear potentially stale data from localStorage
       setCurrentUser(undefined);
-      navigate("/login");
     }
-  }, [navigate]);
+  }, []);
 
   const logOut = () => {
     AuthService.logout();
