@@ -3,7 +3,7 @@ FROM maven:3.8.5-openjdk-17 AS builder
 
 WORKDIR /app
 
-# Copy pom.xml and download dependencies
+# Copy pom.xml first to leverage Docker cache for dependency downloads
 COPY pom.xml .
 RUN mvn dependency:go-offline
 
