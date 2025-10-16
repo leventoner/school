@@ -56,10 +56,10 @@ jobs:
       - name: Build and push backend Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ${{ github.workspace }} # Explicitly set context to the workspace root
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_IMAGE_NAME }}:latest, ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_IMAGE_NAME }}:${{ github.sha }}
-          file: Dockerfile # Relative to context
+          file: Dockerfile # Path to Dockerfile relative to the context
 
       - name: Build and push frontend Docker image
         uses: docker/build-push-action@v4
