@@ -84,3 +84,4 @@ $RECYCLE.BIN/
 # Docker
 # Dockerfile
 .dockerignore
+update-local.bat
