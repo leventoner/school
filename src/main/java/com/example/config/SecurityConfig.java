@@ -87,7 +87,6 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> 
           auth.requestMatchers("/api/auth/**").permitAll()
               .requestMatchers("/api/test/**").permitAll()
-              .requestMatchers("/api/students/**").permitAll() // Allow public access to all student endpoints
               .anyRequest().authenticated()
         );
     
