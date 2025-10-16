@@ -2,26 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
 import { motion } from 'framer-motion';
-
-// Define interfaces for types used in the component
+import { Course, Grade, StudentClass } from '../enums';
+import { Student } from '../types';
 
 interface AuthHeader {
   Authorization: string;
-}
-
-interface Grades {
-  [key: string]: string;
-}
-
-// Interface for the data sent to the API when adding a student
-interface NewStudentData {
-  firstName: string;
-  lastName: string;
-  schoolNumber?: string | null;
-  birthDate: string;
-  studentClass?: string | null;
-  courses: string[];
-  grades: Grades;
 }
 
 const API_URL = 'http://localhost:8083/api/students';
@@ -31,13 +16,11 @@ const AddStudent: React.FC = () => {
   const [lastName, setLastName] = useState('');
   const [schoolNumber, setSchoolNumber] = useState('');
   const [birthDate, setBirthDate] = useState('');
-  const [studentClass, setStudentClass] = useState('');
-  const [courses, setCourses] = useState('');
-  const [grades, setGrades] = useState('');
+  const [studentClass, setStudentClass] = useState<StudentClass>(StudentClass.C1A); // Initialize with a default or empty value
+  const [courses, setCourses] = useState<Record<Course, Grade>>({} as Record<Course, Grade>);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     const user = AuthService.getCurrentUser();
     if (!user) {
@@ -45,43 +28,45 @@ const AddStudent: React.FC = () => {
     }
   }, [navigate]);
 
-  // Check if the current user has ADMIN or MODERATOR roles
   const currentUser = AuthService.getCurrentUser();
   const userRoles = currentUser?.roles ?? [];
   const canAddStudent = userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_MODERATOR');
 
+  const handleCourseChange = (course: Course, checked: boolean) => {
+    const newCourses = { ...courses };
+    if (checked) {
+      newCourses[course] = Grade.A; // Default grade
+    } else {
+      delete newCourses[course];
+    }
+    setCourses(newCourses);
+  };
+
+  const handleGradeChange = (course: Course, grade: Grade) => {
+    const newCourses = { ...courses, [course]: grade };
+    setCourses(newCourses);
+  };
+
   const handleAddStudent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // If the user doesn't have the required role, prevent submission
     if (!canAddStudent) {
       setError('You do not have permission to add students.');
       return;
     }
 
-    // Basic validation for required fields
-    if (!firstName || !lastName || !schoolNumber || !birthDate || !courses) {
-      setError('Please fill in all required fields.'); // Use setError for consistency
+    if (!firstName || !lastName || !schoolNumber || !birthDate) {
+      setError('Please fill in all required fields.');
       return;
     }
 
-    const coursesArray: string[] = courses.split(',').map(course => course.trim()).filter(Boolean); // Filter out empty strings
-    const gradesObject: Grades = grades.split(',').reduce((acc: Grades, grade) => {
-      const [key, value] = grade.split(':');
-      if (key && value) {
-        acc[key.trim()] = value.trim();
-      }
-      return acc;
-    }, {});
-
-    const newStudentData: NewStudentData = {
+    const newStudentData: Omit<Student, 'id'> = {
       firstName,
       lastName,
-      schoolNumber: schoolNumber || null, // Send null if empty, assuming backend handles it
+      schoolNumber,
       birthDate,
-      studentClass: studentClass || null, // Send null if empty
-      courses: coursesArray,
-      grades: gradesObject
+      studentClass,
+      courses,
     };
 
     try {
@@ -90,23 +75,21 @@ const AddStudent: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': authHeader.Authorization // Use JWT token
+          'Authorization': authHeader.Authorization
         },
         body: JSON.stringify(newStudentData)
       });
 
       if (response.ok) {
-        navigate('/students'); // Redirect to student list after successful addition
+        navigate('/students');
       } else if (response.status === 403) {
         setError('You do not have permission to add students.');
       } else {
-        // Attempt to parse error message from backend if available
         let errorMessage = 'Failed to add student';
         try {
             const errorData = await response.json();
             errorMessage = errorData.message || errorMessage;
         } catch (parseError) {
-            // Ignore if error response is not JSON
         }
         setError(errorMessage);
         console.error(`Add student failed: ${response.status}`);
@@ -117,7 +100,6 @@ const AddStudent: React.FC = () => {
     }
   };
 
-  // Render the form only if the user has the necessary role
   if (!canAddStudent) {
     return (
       <div className="text-center text-red-500 mt-8">
@@ -189,38 +171,60 @@ const AddStudent: React.FC = () => {
         </div>
         <div>
           <label htmlFor="studentClass" className="block text-sm font-medium text-gray-700 mb-2">Class</label>
-          <input
-            type="text"
+          <select
             id="studentClass"
             value={studentClass}
-            onChange={(e) => setStudentClass(e.target.value)}
-            placeholder="e.g., Computer Science"
-            className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label htmlFor="courses" className="block text-sm font-medium text-gray-700 mb-2">Courses (comma-separated)</label>
-          <input
-            type="text"
-            id="courses"
-            value={courses}
-            onChange={(e) => setCourses(e.target.value)}
-            placeholder="e.g., Math, Science"
+            onChange={(e) => setStudentClass(e.target.value as StudentClass)}
             className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
-          />
+          >
+            <option value="" disabled>Select a class</option>
+            {Object.values(StudentClass).map((cls: StudentClass) => (
+              <option key={cls} value={cls}>
+                {cls}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="md:col-span-2">
-          <label htmlFor="grades" className="block text-sm font-medium text-gray-700 mb-2">Grades (e.g., Math:A,Science:B)</label>
-          <input
-            type="text"
-            id="grades"
-            value={grades}
-            onChange={(e) => setGrades(e.target.value)}
-            placeholder="e.g., Math:A,Science:B"
-            className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-2">Courses</label>
+          <div className="grid grid-cols-2 gap-4">
+            {Object.values(Course).map((course) => (
+              <div key={course} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={course}
+                  checked={courses.hasOwnProperty(course)}
+                  onChange={(e) => handleCourseChange(course, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor={course} className="ml-2 block text-sm text-gray-900">
+                  {course.replace(/_/g, ' ')}
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
+        {Object.keys(courses).length > 0 && (
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Grades</label>
+            {Object.keys(courses).map((course) => (
+              <div key={course} className="flex items-center mb-2">
+                <label htmlFor={`grade-${course}`} className="w-1/2">{course.replace(/_/g, ' ')}</label>
+                <select
+                  id={`grade-${course}`}
+                  value={courses[course as Course]}
+                  onChange={(e) => handleGradeChange(course as Course, e.target.value as Grade)}
+                  className="w-1/2 bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {Object.values(Grade).map((grade) => (
+                    <option key={grade} value={grade}>{grade}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="md:col-span-2 text-right">
           <motion.button
             type="submit"

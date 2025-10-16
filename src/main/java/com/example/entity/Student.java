@@ -1,11 +1,14 @@
 package com.example.entity;
 
+import com.example.entity.enums.Course;
+import com.example.entity.enums.Grade;
+import com.example.entity.enums.StudentClass;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 @Entity
@@ -21,11 +24,14 @@ public class Student {
     private String lastName;
     private String schoolNumber;
     private String birthDate;
-    private String studentClass;
+    @Enumerated(EnumType.STRING)
+    private StudentClass studentClass;
 
     @ElementCollection
-    private List<String> courses;
-
-    @ElementCollection
-    private Map<String, String> grades;
+    @CollectionTable(name = "student_courses", joinColumns = @JoinColumn(name = "student_id"))
+    @MapKeyColumn(name = "course")
+    @MapKeyEnumerated(EnumType.STRING)
+    @Column(name = "grade")
+    @Enumerated(EnumType.STRING)
+    private Map<Course, Grade> courses = new HashMap<>();
 }

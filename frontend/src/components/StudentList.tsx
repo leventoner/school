@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
 import { motion } from 'framer-motion';
 
+import { Student } from '../types';
+
 // Define interfaces for types used in the component
 // interface User {
 //   id: number;
@@ -13,17 +15,6 @@ import { motion } from 'framer-motion';
 // interface AuthHeader {
 //   Authorization: string;
 // }
-
-interface Student {
-  id: number;
-  firstName: string;
-  lastName: string;
-  schoolNumber?: string | null;
-  birthDate: string; // Assuming date is stored as string
-  studentClass?: string | null;
-  courses: string[];
-  grades: { [key: string]: string }; // Assuming grades is an object with string keys and string values
-}
 
 const API_URL = 'http://localhost:8083/api/students';
 

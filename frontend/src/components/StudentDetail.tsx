@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
 import { motion } from 'framer-motion';
 
+import { Student } from '../types';
+
 // Define interfaces for types used in the component
 // interface User {
 //   id: number;
@@ -12,21 +14,6 @@ import { motion } from 'framer-motion';
 
 interface AuthHeader {
   Authorization: string;
-}
-
-interface Grades {
-  [key: string]: string;
-}
-
-interface Student {
-  id: number;
-  firstName: string;
-  lastName: string;
-  schoolNumber?: string | null;
-  birthDate: string;
-  studentClass?: string | null;
-  courses: string[];
-  grades: Grades;
 }
 
 const API_URL = 'http://localhost:8083/api/students';
@@ -185,15 +172,11 @@ const StudentDetail: React.FC = () => {
                     <p className="text-sm text-gray-500">Class</p>
                     <p className="text-lg font-medium text-gray-900">{student.studentClass}</p>
                 </div>
-                <div>
-                    <p className="text-sm text-gray-500">Courses</p>
-                    <p className="text-lg font-medium text-gray-900">{student.courses.join(', ')}</p>
-                </div>
                 <div className="md:col-span-2">
-                    <p className="text-sm text-gray-500">Grades</p>
+                    <p className="text-sm text-gray-500">Courses and Grades</p>
                     <ul className="list-disc list-inside">
-                        {Object.entries(student.grades).map(([course, grade]) => (
-                            <li key={course} className="text-lg font-medium text-gray-900">{course}: {grade}</li>
+                        {Object.entries(student.courses).map(([course, grade]) => (
+                            <li key={course} className="text-lg font-medium text-gray-900">{course.replace(/_/g, ' ')}: {grade}</li>
                         ))}
                     </ul>
                 </div>

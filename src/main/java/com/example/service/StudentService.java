@@ -41,7 +41,6 @@ public class StudentService {
         student.setBirthDate(studentDetails.getBirthDate());
         student.setStudentClass(studentDetails.getStudentClass());
         student.setCourses(studentDetails.getCourses());
-        student.setGrades(studentDetails.getGrades());
 
         return this.studentRepository.save(student);
     }
