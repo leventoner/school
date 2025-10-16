@@ -67,7 +67,7 @@ jobs:
           context: ./frontend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.FRONTEND_IMAGE_NAME }}:latest, ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
-          file: Dockerfile # Path to Dockerfile relative to the context
+          file: ./frontend/Dockerfile # Explicitly specify the path to the frontend Dockerfile
 
       # - name: Deploy to server (Example - requires SSH setup and server configuration)
       #   uses: appleboy/ssh-action@master
