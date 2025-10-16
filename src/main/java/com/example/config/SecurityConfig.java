@@ -93,7 +93,7 @@ public class SecurityConfig {
     http.authenticationProvider(authenticationProvider());
 
     // Add the CorsFilter before the AuthTokenFilter
-    http.addFilterBefore(corsFilter(), CorsFilter.class); // Use CorsFilter here
+    http.addFilterBefore(corsFilter(), AuthTokenFilter.class); // Corrected filter order
     http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     
     return http.build();
