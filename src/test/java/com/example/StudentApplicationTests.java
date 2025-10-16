@@ -20,7 +20,29 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import com.example.entity.enums.Course;
+import com.example.entity.enums.Grade;
+import com.example.entity.enums.StudentClass;
+import com.example.payload.request.LoginRequest;
+import com.example.payload.response.JwtResponse;
+import com.example.service.StudentService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -34,6 +56,23 @@ class StudentApplicationTests extends AbstractIntegrationTest {
 
 	@Autowired
 	private ObjectMapper objectMapper;
+
+	private String jwtToken;
+
+	@BeforeEach
+	void setUp() throws Exception {
+		LoginRequest loginRequest = new LoginRequest("root", "root");
+
+		MvcResult result = mockMvc.perform(post("/api/auth/signin")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andReturn();
+
+		String responseContent = result.getResponse().getContentAsString();
+		JwtResponse jwtResponse = objectMapper.readValue(responseContent, JwtResponse.class);
+		jwtToken = jwtResponse.getToken();
+	}
 
 	@Test
 	void contextLoads() {
@@ -53,7 +92,7 @@ class StudentApplicationTests extends AbstractIntegrationTest {
 		given(studentService.getAllStudents()).willReturn(allStudents);
 
 		mockMvc.perform(get("/api/students")
-						.with(httpBasic("user", "password")))
+						.header("Authorization", "Bearer " + jwtToken))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.size()").value(2))
@@ -69,7 +108,7 @@ class StudentApplicationTests extends AbstractIntegrationTest {
 		given(studentService.getStudentById(1)).willReturn(student);
 
 		mockMvc.perform(get("/api/students/1")
-						.with(httpBasic("user", "password")))
+						.header("Authorization", "Bearer " + jwtToken))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.firstName").value("John"));
 	}
@@ -99,7 +138,7 @@ class StudentApplicationTests extends AbstractIntegrationTest {
 		given(studentService.insertStudent(any(Student.class))).willReturn(studentToReturn);
 
 		mockMvc.perform(post("/api/students")
-						.with(httpBasic("user", "password"))
+						.header("Authorization", "Bearer " + jwtToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(studentToInsert)))
 				.andExpect(status().isCreated())
@@ -111,7 +150,7 @@ class StudentApplicationTests extends AbstractIntegrationTest {
 		doNothing().when(studentService).removeStudentById(1);
 
 		mockMvc.perform(delete("/api/students/1")
-						.with(httpBasic("user", "password")))
+						.header("Authorization", "Bearer " + jwtToken))
 				.andExpect(status().isNoContent());
 	}
 }
