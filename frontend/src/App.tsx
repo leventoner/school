@@ -18,7 +18,7 @@ interface LoginResponse {
   id: number;
   username: string;
   roles: string[];
-  accessToken: string;
+  token: string;
   tokenType: string;
 }
 
@@ -37,7 +37,7 @@ const App = () => {
     // We are checking for properties that are part of the LoginResponse interface.
     // If AuthService.getCurrentUser() returns a type that is not fully LoginResponse,
     // this check will prevent type errors.
-    if (userFromService && typeof userFromService.id === 'number' && typeof userFromService.username === 'string' && Array.isArray(userFromService.roles) && typeof userFromService.accessToken === 'string') {
+    if (userFromService && typeof userFromService.id === 'number' && typeof userFromService.username === 'string' && Array.isArray(userFromService.roles) && typeof userFromService.token === 'string') {
       // Type assertion is safe here because we've checked for the presence and type of required properties
       setCurrentUser(userFromService as LoginResponse);
     } else {
