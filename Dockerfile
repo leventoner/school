@@ -11,7 +11,7 @@ RUN mvn dependency:go-offline
 COPY src ./src
 
 # Build the Spring Boot application
-RUN mvn package -DskipTests
+RUN mvn package
 
 # Stage 2: Create the final, lean image
 FROM eclipse-temurin:17-jre-alpine

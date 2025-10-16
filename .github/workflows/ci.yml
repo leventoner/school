@@ -29,7 +29,7 @@ jobs:
 
       - name: Build backend with Maven
         run: |
-          mvn clean package -DskipTests
+          mvn clean package
         working-directory: ${{ github.workspace }} # Ensure commands run from the root
 
       - name: Install frontend dependencies and build
