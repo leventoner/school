@@ -1,6 +1,6 @@
 import axios, { AxiosResponse, AxiosInstance } from "axios";
 
-const API_URL = "http://localhost:8083/api/auth/";
+const API_URL = "http://localhost:8083/api/";
 
 // This interface represents the user data including the authentication token.
 interface LoginResponse {
@@ -56,7 +56,7 @@ apiClient.interceptors.request.use(
 );
 
 const register: RegisterFunction = (username, email, password) => {
-  return apiClient.post("signup", { // Use apiClient instead of axios
+  return apiClient.post("auth/signup", { // Use apiClient instead of axios
     username,
     email,
     password,
@@ -64,7 +64,7 @@ const register: RegisterFunction = (username, email, password) => {
 };
 
 const login: LoginFunction = async (username, password) => {
-  const response = await apiClient.post<LoginResponse>("signin", { // Use apiClient instead of axios
+  const response = await apiClient.post<LoginResponse>("auth/signin", { // Use apiClient instead of axios
     username,
     password,
   });

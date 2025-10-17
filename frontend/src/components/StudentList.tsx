@@ -27,7 +27,7 @@ const StudentList: React.FC = () => {
     setIsLoading(true);
     setError(null); // Clear previous errors
     try {
-      const response = await AuthService.apiClient.get('/students');
+      const response = await AuthService.apiClient.get('students');
       const data: Student[] = response.data; // Expecting an array of students
       setStudents(data);
     } catch (e: any) { // Catch any type for broader error handling
