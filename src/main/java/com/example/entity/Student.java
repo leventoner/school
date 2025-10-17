@@ -24,7 +24,6 @@ public class Student {
     private String lastName;
     private String schoolNumber;
     private String birthDate;
-    @Enumerated(EnumType.STRING)
     private StudentClass studentClass;
 
     @ElementCollection
