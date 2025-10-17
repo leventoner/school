@@ -48,7 +48,9 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // Varsayılan HTTP Basic ve Form Login'i devre dışı bırak
             .httpBasic(AbstractHttpConfigurer::disable)
-            .formLogin(AbstractHttpConfigurer::disable);
+            .formLogin(AbstractHttpConfigurer::disable)
+            // Oluşturduğumuz AuthenticationProvider'ı Spring Security'ye tanıtıyoruz.
+            .authenticationProvider(authenticationProvider());
         return http.build();
     }
 
