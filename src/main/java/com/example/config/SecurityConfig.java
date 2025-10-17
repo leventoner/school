@@ -80,19 +80,24 @@ public class SecurityConfig {
         .csrf(csrf -> csrf.disable())
         .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> 
-          auth.requestMatchers("/api/auth/**").permitAll()
-              .requestMatchers("/api/test/**").permitAll()
-              .requestMatchers(HttpMethod.GET, "/api/students/**").permitAll()
-              // Allow Swagger UI access
-              .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/v2/api-docs/**").permitAll()
-              .anyRequest().authenticated()
-    );
+        .authorizeHttpRequests(auth ->
+            // Permit all requests to authentication endpoints
+            auth.requestMatchers("/api/auth/**").permitAll()
+                // Permit all requests to test endpoints
+                .requestMatchers("/api/test/**").permitAll()
+                // Permit GET requests to student endpoints
+                .requestMatchers(HttpMethod.GET, "/api/students/**").permitAll()
+                // Permit access to Swagger UI and API documentation
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/v2/api-docs/**").permitAll()
+                // For all other requests, require authentication
+                .anyRequest().authenticated()
+        )
+        // Add the JWT authentication filter before the standard UsernamePasswordAuthenticationFilter
+        // This filter will only be applied to requests that are not permitted by the authorizeHttpRequests rules above.
+        .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     
     http.authenticationProvider(authenticationProvider());
 
-    http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-    
     return http.build();
   }
 }
