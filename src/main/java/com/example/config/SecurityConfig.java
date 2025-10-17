@@ -84,8 +84,10 @@ public class SecurityConfig {
           auth.requestMatchers("/api/auth/**").permitAll()
               .requestMatchers("/api/test/**").permitAll()
               .requestMatchers(HttpMethod.GET, "/api/students/**").permitAll()
+              // Allow Swagger UI access
+              .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/v2/api-docs/**").permitAll()
               .anyRequest().authenticated()
-        );
+    );
     
     http.authenticationProvider(authenticationProvider());
 
