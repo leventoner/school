@@ -77,7 +77,7 @@ const StudentList: React.FC = () => {
       transition={{ duration: 0.5 }}
     >
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-semibold text-gray-800">Enrolled Students</h2>
+        <h2 className="text-3xl font-semibold text-cyan-400">Students</h2>
         {canAddStudent && (
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Link to="/add" className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 inline-block">
