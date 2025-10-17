@@ -20,11 +20,12 @@ public class StudentClassConverter implements AttributeConverter<StudentClass, S
         if (dbData == null) {
             return null;
         }
-        try {
-            return StudentClass.valueOf(dbData.toUpperCase().replace("-", ""));
-        } catch (IllegalArgumentException e) {
-            // Log the error and return null or a default value
-            return null;
+        for (StudentClass studentClass : StudentClass.values()) {
+            if (studentClass.getValue().equalsIgnoreCase(dbData)) {
+                return studentClass;
+            }
         }
+        // Log the error and return null or a default value
+        return null;
     }
 }
