@@ -34,6 +34,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
     try {
       String jwt = parseJwt(request);
+      logger.info("JWT Token: {}", jwt);
       // Removed verbose info logs for JWT parsing and validation result
       boolean isValid = jwt != null && jwtUtils.validateJwtToken(jwt);
 
