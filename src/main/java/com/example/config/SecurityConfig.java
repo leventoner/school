@@ -16,7 +16,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import com.example.security.jwt.AuthEntryPointJwt;
 import com.example.security.jwt.AuthTokenFilter;
@@ -73,15 +72,11 @@ public class SecurityConfig {
       return source;
   }
 
-  // CorsFilter Bean to apply CORS configuration
-  @Bean
-  public CorsFilter corsFilter() {
-      return new CorsFilter(corsConfigurationSource());
-  }
-  
+
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf.disable())
+    http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(csrf -> csrf.disable())
         .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> 
@@ -92,8 +87,6 @@ public class SecurityConfig {
     
     http.authenticationProvider(authenticationProvider());
 
-    // Add the CorsFilter before the AuthTokenFilter
-    http.addFilterBefore(corsFilter(), AuthTokenFilter.class); // Corrected filter order
     http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     
     return http.build();
