@@ -16,7 +16,6 @@ import { Student } from '../types';
 //   Authorization: string;
 // }
 
-const API_URL = 'http://localhost:8083/api/students';
 
 const StudentList: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]); // Explicitly type students as an array of Student
@@ -28,17 +27,8 @@ const StudentList: React.FC = () => {
     setIsLoading(true);
     setError(null); // Clear previous errors
     try {
-      // Removed user check and auth header for public access to student list
-      const response = await fetch(API_URL, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data: Student[] = await response.json(); // Expecting an array of students
+      const response = await AuthService.apiClient.get('/students');
+      const data: Student[] = response.data; // Expecting an array of students
       setStudents(data);
     } catch (e: any) { // Catch any type for broader error handling
       setError('Could not fetch students. Please check your connection.');
@@ -46,7 +36,7 @@ const StudentList: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []); // Removed navigate from dependencies as it's no longer used here
+  }, []);
 
   useEffect(() => {
     fetchStudents();
