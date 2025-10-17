@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -30,9 +31,13 @@ public class SecurityConfig {
                 // Uygulamanızda JWT veya başka bir kimlik doğrulama mekanizması varsa,
                 // bu kısmı uygulamanızın gereksinimlerine göre ayarlamanız gerekebilir.
                 .anyRequest().authenticated()
-            );
-            // Eğer uygulamanızda form tabanlı giriş veya HTTP Basic auth kullanmıyorsanız,
-            // bu kısmı daha fazla yapılandırmanız gerekebilir (örneğin, JWT filtreleri eklemek).
+            )
+            // Oturum yönetimini durumsuz (stateless) olarak ayarla.
+            // REST API'ler için her istek kendi kimlik bilgisini (örn. JWT) içermelidir.
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // Varsayılan HTTP Basic ve Form Login'i devre dışı bırak
+            .httpBasic(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable);
         return http.build();
     }
 }
