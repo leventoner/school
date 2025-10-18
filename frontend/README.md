@@ -1,3 +1,11 @@
+# Student Management System - Frontend
+
+This project contains the frontend layer of the Student Management System. The application is a Single Page Application (SPA) developed using React and TypeScript.
+
+For detailed information about the entire project, its architecture, and how to run it, please refer to the [documentation file](../documentation/documentation.md) in the main directory.
+
+---
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

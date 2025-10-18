@@ -49,21 +49,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Print current working directory
-        run: pwd
-        working-directory: ${{ github.workspace }}
-
-      - name: List files in root for debugging
-        run: ls -R
-        working-directory: ${{ github.workspace }}
-
       - name: Build and push backend Docker image
         uses: docker/build-push-action@v4
         with:
-          context: ${{ github.workspace }} # Build context is the repository root
+          context: ./backend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_IMAGE_NAME }}:latest, ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.BACKEND_IMAGE_NAME }}:${{ github.sha }}
-          file: Dockerfile # Path to the Dockerfile relative to the context
+          file: ./backend/Dockerfile
 
       - name: Build and push frontend Docker image
         uses: docker/build-push-action@v4

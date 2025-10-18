@@ -18,7 +18,7 @@ services:
 
   backend:
     container_name: student-backend-prod
-    image: leventoner/school-backend:latest  # <-- Docker Hub'dan gelen imaj
+    image: leventoner/school-backend:latest  # <-- Image from Docker Hub
     restart: on-failure
     ports:
       - "8083:8083"
@@ -33,7 +33,7 @@ services:
 
   frontend:
     container_name: student-frontend-prod
-    image: leventoner/school-frontend:latest # <-- Docker Hub'dan gelen imaj
+    image: leventoner/school-frontend:latest # <-- Image from Docker Hub
     restart: on-failure
     ports:
       - "3000:80"

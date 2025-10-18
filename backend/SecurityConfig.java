@@ -32,24 +32,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // CSRF korumasını devre dışı bırak, çünkü REST API'ler genellikle bunu kullanmaz
-            // ve JWT gibi token tabanlı kimlik doğrulama ile zaten korunurlar.
+            // Disable CSRF protection, as REST APIs generally do not use it
+            // and are already protected by token-based authentication like JWT.
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(authorize -> authorize
-                // Swagger UI ve OpenAPI dokümantasyon yollarına herkesin erişimine izin ver
+                // Allow public access to Swagger UI and OpenAPI documentation paths
                 .requestMatchers(WHITE_LIST_URL).permitAll()
-                // Diğer tüm istekler için kimlik doğrulama gerektir
-                // Uygulamanızda JWT veya başka bir kimlik doğrulama mekanizması varsa,
-                // bu kısmı uygulamanızın gereksinimlerine göre ayarlamanız gerekebilir.
+                // Require authentication for all other requests
+                // If your application uses JWT or another authentication mechanism,
+                // you may need to adjust this part according to your application's requirements.
                 .anyRequest().authenticated()
             )
-            // Oturum yönetimini durumsuz (stateless) olarak ayarla.
-            // REST API'ler için her istek kendi kimlik bilgisini (örn. JWT) içermelidir.
+            // Set session management to stateless.
+            // For REST APIs, each request should contain its own credentials (e.g., JWT).
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // Varsayılan HTTP Basic ve Form Login'i devre dışı bırak
+            // Disable default HTTP Basic and Form Login
             .httpBasic(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable)
-            // Oluşturduğumuz AuthenticationProvider'ı Spring Security'ye tanıtıyoruz.
+            // Introduce the AuthenticationProvider we created to Spring Security.
             .authenticationProvider(authenticationProvider());
         return http.build();
     }
@@ -62,7 +62,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        // Gerçek bir UserDetailsService'iniz olana kadar geçici bir tane kullanıyoruz.
+        // We are using a temporary one until you have a real UserDetailsService.
         authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
@@ -75,8 +75,8 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        // Bu geçici bir çözümdür. Gerçek uygulamanızda, veritabanından kullanıcı
-        // bilgilerini çeken bir UserDetailsService implementasyonu sağlamalısınız.
+        // This is a temporary solution. In your real application, you should provide
+        // a UserDetailsService implementation that fetches user information from the database.
         return new InMemoryUserDetailsManager(
                 User.withUsername("user").password(passwordEncoder().encode("password")).roles("USER").build()
         );
