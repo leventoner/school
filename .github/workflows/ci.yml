@@ -29,19 +29,15 @@ jobs:
 
       - name: Run backend tests
         run: mvn test
-        working-directory: ${{ github.workspace }}
+        working-directory: ./backend
 
       - name: Build backend with Maven
-        run: |
-          mvn clean package -DskipTests
-        working-directory: ${{ github.workspace }} # Ensure commands run from the root
+        run: mvn clean package -DskipTests
+        working-directory: ./backend
 
       - name: Install frontend dependencies and build
-        run: |
-          cd frontend
-          npm install
-          npm run build
-        working-directory: ${{ github.workspace }}
+        run: npm install && npm run build
+        working-directory: ./frontend
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
