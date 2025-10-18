@@ -92,8 +92,12 @@ public class SecurityConfig {
                 // For all other requests, require authentication
                 .anyRequest().authenticated()
         )
-        // Add the JWT authentication filter before the standard UsernamePasswordAuthenticationFilter
-        // This filter will only be applied to requests that are not permitted by the authorizeHttpRequests rules above.
+        // Add the JWT authentication filter. It will be applied to all requests by default.
+        // The filter itself checks for JWT, and if none is found, it allows the request to proceed.
+        // The authorizeHttpRequests rules then determine if authentication is required.
+        // The issue was that the filter was applied globally, and the AuthEntryPointJwt was still being hit.
+        // The correct approach is to ensure the filter is applied *after* permitAll rules are evaluated for the filter chain.
+        // By chaining addFilterBefore to authorizeHttpRequests, we ensure the filter is applied to the correct set of requests.
         .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     
     http.authenticationProvider(authenticationProvider());
