@@ -88,7 +88,7 @@ public class SecurityConfig {
                 // Permit GET requests to student endpoints
                 .requestMatchers(HttpMethod.GET, "/api/students/**").permitAll()
                 // Permit access to Swagger UI and API documentation
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/v2/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/v2/api-docs/**", "/favicon.ico", "/.well-known/appspecific/com.chrome.devtools.json").permitAll()
                 // For all other requests, require authentication
                 .anyRequest().authenticated()
         )
